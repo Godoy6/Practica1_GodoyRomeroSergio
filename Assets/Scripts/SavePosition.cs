@@ -1,38 +1,35 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
+using System.IO; // Importa funciones para leer/escribir archivos
 
 public class SavePosition : MonoBehaviour
 {
-    
-    void Start() // Start is called before the first frame update
-    {
-        StreamReader sr = new StreamReader(Application.persistentDataPath + "/saveposition.text");
+    private GameDataManager dataManager; // Instancia para manejar el guardado y carga de datos
 
-        float x = float.Parse(sr.ReadLine());
-        float y = float.Parse(sr.ReadLine());
-        float z = float.Parse(sr.ReadLine());
-        transform.position = new Vector3(x, y, z);
-
-        sr.Close();
-    }
-    
-    void Update() // Update is called once per frame
+    void Start()
     {
-        
+        dataManager = new GameDataManager(); // Crea el manejador de datos
+
+        GameData datos = dataManager.CargarDatos(); // Carga los datos guardados (posición y puntuación)
+
+        transform.position = datos.GetPosition(); // Aplica la posición guardada al transform del jugador
+
+        GamerManager.instance.point = datos.puntuacion; // Restaura la puntuación guardada en el gestor global
     }
 
-    private void OnDisable() 
+    
+    void OnApplicationQuit() // Método llamado cuando la aplicación se cierra
     {
-        FileStream fs = File.Create(Application.persistentDataPath + "/saveposition.text");
-        StreamWriter sw = new StreamWriter(fs);
+        GuardarDatos(); // Guarda los datos actuales antes de cerrar
+    }
 
-        sw.WriteLine(transform.position.x);
-        sw.WriteLine(transform.position.y);
-        sw.WriteLine(transform.position.z);
+    void GuardarDatos() // Guarda la posición y puntuación actuales en un archivo
+    {
+        int puntosActuales = GamerManager.instance.point; // Obtiene la puntuación actual del gestor global
 
-        sw.Close();
-        fs.Close();
+        GameData datos = new GameData(transform.position, puntosActuales); // Crea un objeto GameData con la posición y puntuación actuales
+
+        dataManager.GuardarDatos(datos); // Guarda los datos usando el manejador
     }
 }
